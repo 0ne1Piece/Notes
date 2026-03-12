@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Notes — Study Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0f1a;
+      --surface: #111827;
+      --card: #1a2235;
+      --border: #1f2d45;
+      --accent-math: #38bdf8;
+      --accent-pyq: #fb923c;
+      --accent-glow-math: rgba(56,189,248,0.18);
+      --accent-glow-pyq: rgba(251,146,60,0.18);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --white: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glow blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.25;
+    }
+    .blob-1 { width: 420px; height: 420px; background: #38bdf8; top: -100px; left: -100px; animation: drift 12s ease-in-out infinite alternate; }
+    .blob-2 { width: 340px; height: 340px; background: #fb923c; bottom: -80px; right: -80px; animation: drift 15s ease-in-out infinite alternate-reverse; }
+
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,30px) scale(1.08); }
+    }
+
+    /* ── Wrapper ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      padding: 60px 0 40px;
+      animation: fadeDown 0.8s ease both;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .logo-badge span { color: var(--accent-math); }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 7vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--white);
+    }
+
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent-math), var(--accent-pyq));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Tabs ── */
+    .tabs-row {
+      display: flex;
+      gap: 8px;
+      margin: 36px 0 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all 0.3s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .tab-btn .icon { font-size: 1.1rem; }
+
+    .tab-btn:hover { color: var(--text); background: var(--border); }
+
+    .tab-btn.active[data-tab="maths"] {
+      background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(56,189,248,0.05));
+      color: var(--accent-math);
+      border: 1px solid rgba(56,189,248,0.3);
+      box-shadow: 0 0 20px rgba(56,189,248,0.12);
+    }
+
+    .tab-btn.active[data-tab="pyqs"] {
+      background: linear-gradient(135deg, rgba(251,146,60,0.2), rgba(251,146,60,0.05));
+      color: var(--accent-pyq);
+      border: 1px solid rgba(251,146,60,0.3);
+      box-shadow: 0 0 20px rgba(251,146,60,0.12);
+    }
+
+    /* ── Panel ── */
+    .panel { display: none; animation: fadeUp 0.4s ease both; }
+    .panel.active { display: block; }
+
+    /* ── Section label ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Cards grid ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+    .card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 20px 18px;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 16px 16px 0 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .panel[data-panel="maths"] .card::before { background: linear-gradient(90deg, var(--accent-math), #818cf8); }
+    .panel[data-panel="pyqs"] .card::before  { background: linear-gradient(90deg, var(--accent-pyq), #f472b6); }
+
+    .card:hover { transform: translateY(-4px); }
+    .panel[data-panel="maths"] .card:hover { box-shadow: 0 12px 40px rgba(56,189,248,0.12); border-color: rgba(56,189,248,0.35); }
+    .panel[data-panel="pyqs"] .card:hover  { box-shadow: 0 12px 40px rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.35); }
+    .card:hover::before { opacity: 1; }
+
+    .card-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .card-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card-arrow {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: gap 0.2s;
+    }
+    .panel[data-panel="maths"] .card-arrow { color: var(--accent-math); }
+    .panel[data-panel="pyqs"] .card-arrow  { color: var(--accent-pyq); }
+    .card:hover .card-arrow { gap: 10px; }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      line-height: 2;
+    }
+    .empty .e-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    footer strong { color: var(--accent-math); }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 500px) {
+      .tab-btn { font-size: 0.8rem; padding: 10px 10px; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="wrapper">
+
+    <header>
+      <div class="logo-badge">📚 <span>Study Hub</span> — Personal Notes</div>
+      <h1>Your Notes,<br/><em>Organised.</em></h1>
+      <p class="subtitle">Access your study material from any device, anytime.</p>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs-row">
+      <button class="tab-btn active" data-tab="maths" onclick="switchTab('maths')">
+        <span class="icon">∑</span> Maths
+      </button>
+      <button class="tab-btn" data-tab="pyqs" onclick="switchTab('pyqs')">
+        <span class="icon">📝</span> PYQs
+      </button>
+    </div>
+
+    <!-- Maths Panel -->
+    <div class="panel active" data-panel="maths">
+      <div class="section-label">Mathematics Notes</div>
+      <div class="cards">
+
+        <!-- ✏️ EDIT: Replace href="#" with your actual HTML file paths like "maths-algebra.html" -->
+
+        
+        <a class="card" href="tomato_q1_50.html">
+          <div class="card-icon">α⊀</div>
+          <div class="card-title">Tomato:1-50</div>
+          <div class="card-desc">by isi</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+         <a class="card" href="tomato_q51_100-2.html">
+          <div class="card-icon">α⊀</div>
+          <div class="card-title">Tomato:51-100</div>
+          <div class="card-desc">by isi</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+        <a class="card" href="maths-algebra.html">
+          <div class="card-icon">🔢</div>
+          <div class="card-title">Algebra</div>
+          <div class="card-desc">Equations, polynomials, inequalities & more.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+        <a class="card" href="maths-calculus.html">
+          <div class="card-icon">∫</div>
+          <div class="card-title">Calculus</div>
+          <div class="card-desc">Limits, derivatives, integrals & applications.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+        <a class="card" href="maths-geometry.html">
+          <div class="card-icon">📐</div>
+          <div class="card-title">Geometry</div>
+          <div class="card-desc">2D/3D shapes, theorems & coordinate geometry.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+        <a class="card" href="maths-trigonometry.html">
+          <div class="card-icon">📈</div>
+          <div class="card-title">Trigonometry</div>
+          <div class="card-desc">Identities, functions & inverse trig.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+        <a class="card" href="maths-statistics.html">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Statistics & Probability</div>
+          <div class="card-desc">Distributions, mean, variance & probability.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+        <a class="card" href="maths-matrices.html">
+          <div class="card-icon">🔷</div>
+          <div class="card-title">Matrices & Vectors</div>
+          <div class="card-desc">Linear algebra, determinants & transformations.</div>
+          <div class="card-arrow">Open Notes →</div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- PYQs Panel -->
+    <div class="panel" data-panel="pyqs">
+      <div class="section-label">Previous Year Questions</div>
+      <div class="cards">
+
+        <!-- ✏️ EDIT: Replace href="#" with your actual PYQ file paths -->
+
+        <a class="card" href="pyq-2024.html">
+          <div class="card-icon">📄</div>
+          <div class="card-title">2024 Paper</div>
+          <div class="card-desc">Full question paper with solutions and analysis.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+        <a class="card" href="pyq-2023.html">
+          <div class="card-icon">📄</div>
+          <div class="card-title">2023 Paper</div>
+          <div class="card-desc">Full question paper with solutions and analysis.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+        <a class="card" href="pyq-2022.html">
+          <div class="card-icon">📄</div>
+          <div class="card-title">2022 Paper</div>
+          <div class="card-desc">Full question paper with solutions and analysis.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+        <a class="card" href="pyq-2021.html">
+          <div class="card-icon">📄</div>
+          <div class="card-title">2021 Paper</div>
+          <div class="card-desc">Full question paper with solutions and analysis.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+        <a class="card" href="pyq-maths.html">
+          <div class="card-icon">🧮</div>
+          <div class="card-title">Maths PYQs</div>
+          <div class="card-desc">Chapterwise sorted maths previous year questions.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+        <a class="card" href="pyq-important.html">
+          <div class="card-icon">⭐</div>
+          <div class="card-title">Most Important Qs</div>
+          <div class="card-desc">High-frequency questions likely to repeat.</div>
+          <div class="card-arrow">Open PYQ →</div>
+        </a>
+
+      </div>
+    </div>
+
+    <footer>
+      Built with GitHub Pages &mdash; <strong>Always accessible. Always free.</strong>
+    </footer>
+
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+      document.querySelector(`.panel[data-panel="${tab}"]`).classList.add('active');
+    }
+  </script>
+</body>
+</html>
